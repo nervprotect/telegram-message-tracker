@@ -29,14 +29,22 @@ from telegram.ext import Application, CommandHandler, TypeHandler, ContextTypes
 from telegram.constants import ParseMode
 from telegram.error import RetryAfter, BadRequest
 
-# Конфиг берётся из переменных окружения (для Railway), с локальными значениями по умолчанию.
+# Конфиг берётся из переменных окружения (для Railway/Render), с локальными значениями по умолчанию.
 TOKEN = os.environ.get("BOT_TOKEN", "")
 ADMIN_ID = int(os.environ.get("ADMIN_ID", "347799240"))
 
 # DATA_DIR — на Railway укажи примонтированный Volume (например /data),
 # иначе state.json потеряется при перезапуске (файловая система там эфемерна).
+# На Render свободный план вообще не даёт постоянных дисков — там задай REDIS_URL
+# (например бесплатный Upstash Redis), тогда состояние переживает рестарты контейнера.
 DATA_DIR = os.environ.get("DATA_DIR", os.path.dirname(__file__))
 STATE_FILE = os.path.join(DATA_DIR, "state.json")
+
+REDIS_URL = os.environ.get("REDIS_URL", "")
+_redis_client = None
+if REDIS_URL:
+    import redis as _redis_lib
+    _redis_client = _redis_lib.from_url(REDIS_URL, decode_responses=True)
 
 logging.basicConfig(
     format="%(asctime)s  %(levelname)-8s  %(message)s",
@@ -136,18 +144,38 @@ async def _run_hack(bot, conn: str, chat_id: int, target: str) -> None:
         pass
 
 
-# ── персистентность ──────────────────────────────────────────────────────────
+# ── персистентность (Redis, если задан REDIS_URL, иначе локальный файл) ──────
+
+def _read_state_raw() -> dict:
+    if _redis_client:
+        raw = _redis_client.get("state")
+        if raw is None:
+            return {}
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return {}
+    if not os.path.exists(STATE_FILE):
+        return {}
+    with open(STATE_FILE, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _write_state_raw(data: dict) -> None:
+    if _redis_client:
+        _redis_client.set("state", json.dumps(data, ensure_ascii=False))
+        return
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
 
 def _load_state() -> None:
-    if not os.path.exists(STATE_FILE):
-        return
-    with open(STATE_FILE, encoding="utf-8") as f:
-        data = json.load(f)
+    data = _read_state_raw()
     _conns.update(data.get("conns", {}))
     _settings["check"] = data.get("check", False)
     _excluded.update(data.get("exclude", []))
-    log.info("State loaded: %d conn(s), check=%s, %d exclusion(s)",
-             len(_conns), _settings["check"], len(_excluded))
+    log.info("State loaded: %d conn(s), check=%s, %d exclusion(s), backend=%s",
+             len(_conns), _settings["check"], len(_excluded), "redis" if _redis_client else "file")
 
 
 def _save_state() -> None:
@@ -156,8 +184,7 @@ def _save_state() -> None:
         "check": _settings["check"],
         "exclude": sorted(_excluded),
     }
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    _write_state_raw(data)
 
 
 # ── утилиты ──────────────────────────────────────────────────────────────────
@@ -719,9 +746,35 @@ async def _post_init(app: Application) -> None:
         log.warning("set_my_commands failed: %s", exc)
 
 
+def _start_health_server() -> None:
+    """Render (free web-service план) требует, чтобы сервис слушал $PORT и отвечал на HTTP —
+    иначе деплой считается неудачным/сервис уходит в спячку без реальных запросов.
+    Бот при этом продолжает работать через long polling, это просто параллельный health-check."""
+    import http.server
+    import threading
+
+    port = int(os.environ.get("PORT", "0"))
+    if not port:
+        return
+
+    class _Health(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"OK")
+
+        def log_message(self, *args):
+            pass
+
+    server = http.server.HTTPServer(("0.0.0.0", port), _Health)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    log.info("Health-check server listening on port %d", port)
+
+
 def main() -> None:
     os.makedirs(DATA_DIR, exist_ok=True)
     _load_state()
+    _start_health_server()
     app = Application.builder().token(TOKEN).post_init(_post_init).concurrent_updates(True).build()
 
     app.add_handler(CommandHandler("start", cmd_start))

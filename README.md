@@ -51,6 +51,29 @@ Application started
   (Bot Settings → Business Mode → ON).
 - После деплоя подключи бота в Telegram → Настройки → Telegram Business → Чат-боты.
 
+## Деплой на Render (альтернатива Railway)
+
+В папке уже есть `render.yaml` — Render подхватит его автоматически при создании сервиса
+из этого репозитория (New → Blueprint, или New → Web Service → он найдёт `render.yaml`).
+
+Render free-план **не даёт постоянных дисков** (в отличие от Railway Volume), поэтому вместо
+`DATA_DIR=/data` используется Redis:
+
+1. Заведи бесплатный Redis, например на [Upstash](https://upstash.com) (без ограничения по времени,
+   в отличие от бесплатного Postgres на самом Render).
+2. Service → **Environment** → добавь:
+
+   | Переменная | Значение |
+   |------------|----------|
+   | `BOT_TOKEN` | токен от @BotFather |
+   | `ADMIN_ID` | `347799240` |
+   | `REDIS_URL` | строка подключения вида `rediss://default:...@...upstash.io:6379` |
+
+   Без `REDIS_URL` бот работает как раньше — пишет `state.json` локально, и это
+   теряется при каждом рестарте/редеплое (Render free-план засыпает через ~15 минут простоя).
+3. Бот по-прежнему работает через long polling — `render.yaml` просто заодно поднимает
+   HTTP-порт для health-check'а Render, это не влияет на получение сообщений.
+
 ## Локальный запуск этой папки (по желанию)
 ```bash
 set BOT_TOKEN=твой_токен        # PowerShell: $env:BOT_TOKEN="..."

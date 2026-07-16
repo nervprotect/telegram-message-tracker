@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: save-bot
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_ID
+        sync: false
+      - key: REDIS_URL
+        sync: false

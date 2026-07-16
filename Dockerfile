@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY bot.py .
 
-# state.json пишется в DATA_DIR. На Railway примонтируй Volume и задай DATA_DIR=/data,
-# иначе настройки (кто подключён, /check, исключения) теряются при перезапуске.
+# На Render (и вообще без REDIS_URL) состояние по умолчанию пишется в DATA_DIR —
+# файловая система там эфемерная, всё теряется при каждом рестарте/редеплое.
+# Задай REDIS_URL (например бесплатный Upstash Redis), тогда состояние переживает рестарты.
 CMD ["python", "bot.py"]
