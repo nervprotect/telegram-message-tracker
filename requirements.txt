@@ -1,2 +1,3 @@
 python-telegram-bot>=21
 redis>=5.2
+aiohttp>=3.9

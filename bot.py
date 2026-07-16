@@ -18,12 +18,15 @@ Telegram Business Monitor Bot
 """
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
+import signal
 from datetime import datetime
 from collections import defaultdict
 
+from aiohttp import web
 from telegram import Update, BotCommand, BotCommandScopeChat
 from telegram.ext import Application, CommandHandler, TypeHandler, ContextTypes
 from telegram.constants import ParseMode
@@ -746,35 +749,61 @@ async def _post_init(app: Application) -> None:
         log.warning("set_my_commands failed: %s", exc)
 
 
-def _start_health_server() -> None:
-    """Render (free web-service план) требует, чтобы сервис слушал $PORT и отвечал на HTTP —
-    иначе деплой считается неудачным/сервис уходит в спячку без реальных запросов.
-    Бот при этом продолжает работать через long polling, это просто параллельный health-check."""
-    import http.server
-    import threading
+async def _run_webhook(app: Application, domain: str, port: int) -> None:
+    """Свой aiohttp-сервер вместо app.run_webhook(): встроенный веб-сервер PTB (tornado)
+    отвечает только POST'ом на вебхук-путь и вернёт 404 на health-check GET от Render —
+    поэтому GET "/" и POST вебхука обслуживаем сами, апдейты просто кладём в очередь PTB
+    (это официально поддерживаемый способ подключить свой веб-сервер к PTB)."""
+    webhook_path = "/webhook"
+    webhook_url = f"https://{domain}{webhook_path}"
+    secret = hashlib.sha256(TOKEN.encode()).hexdigest()[:32]
 
-    port = int(os.environ.get("PORT", "0"))
-    if not port:
-        return
+    await app.initialize()
+    await _post_init(app)  # run_polling/run_webhook делают это сами, а мы их не используем
+    await app.bot.set_webhook(url=webhook_url, secret_token=secret, allowed_updates=Update.ALL_TYPES)
+    await app.start()
+    log.info("Webhook set: %s", webhook_url)
 
-    class _Health(http.server.BaseHTTPRequestHandler):
-        def do_GET(self):
-            self.send_response(200)
-            self.end_headers()
-            self.wfile.write(b"OK")
+    async def health(request):
+        return web.Response(text="OK")
 
-        def log_message(self, *args):
+    async def telegram_webhook(request):
+        if secret and request.headers.get("X-Telegram-Bot-Api-Secret-Token") != secret:
+            return web.Response(status=403)
+        data = await request.json()
+        update = Update.de_json(data, app.bot)
+        if update:
+            await app.update_queue.put(update)
+        return web.Response(text="OK")
+
+    web_app = web.Application()
+    web_app.router.add_get("/", health)
+    web_app.router.add_post(webhook_path, telegram_webhook)
+
+    runner = web.AppRunner(web_app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    log.info("Bot started, webhook listening on port %d", port)
+
+    stop_event = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        try:
+            loop.add_signal_handler(sig, stop_event.set)
+        except NotImplementedError:
             pass
+    await stop_event.wait()
 
-    server = http.server.HTTPServer(("0.0.0.0", port), _Health)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    log.info("Health-check server listening on port %d", port)
+    log.info("Shutting down...")
+    await app.stop()
+    await app.shutdown()
+    await runner.cleanup()
 
 
 def main() -> None:
     os.makedirs(DATA_DIR, exist_ok=True)
     _load_state()
-    _start_health_server()
     app = Application.builder().token(TOKEN).post_init(_post_init).concurrent_updates(True).build()
 
     app.add_handler(CommandHandler("start", cmd_start))
@@ -785,8 +814,14 @@ def main() -> None:
     app.add_handler(CommandHandler("include", cmd_include))
     app.add_handler(TypeHandler(Update, _route))
 
-    log.info("Bot started, polling...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    domain = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "")
+    port = int(os.environ.get("PORT", "0"))
+
+    if domain and port:
+        asyncio.run(_run_webhook(app, domain, port))
+    else:
+        log.info("Bot started, polling...")
+        app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
