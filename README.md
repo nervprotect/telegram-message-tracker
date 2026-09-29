@@ -27,3 +27,14 @@ Supports deployment on:
 
 - Railway
 - Render
+
+## 🗺 Roadmap
+
+- [ ] Add automated tests
+- [ ] Improve error handling
+- [ ] Add GitHub Actions CI
+- [ ] Improve logging
+- [ ] Support more message types
+
+
+
