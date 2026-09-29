@@ -21,6 +21,17 @@ A Telegram bot that tracks deleted and edited messages using Telegram Business.
 - aiohttp
 - Docker
 
+## ⚙️ Configuration
+
+The project uses environment variables for configuration.
+
+See `.env.example` for the required variables:
+
+- `BOT_TOKEN` — Telegram bot token
+- `ADMIN_ID` — Telegram administrator user ID
+- `DATA_DIR` — directory for local state storage
+- `REDIS_URL` — Redis connection URL
+
 ## Deployment
 
 Supports deployment on:
