@@ -41,7 +41,7 @@ Supports deployment on:
 
 ## 🗺 Roadmap
 
-- [ ] Add automated tests
+- [ ] Add automated tests(#1)
 - [ ] Improve error handling
 - [ ] Add GitHub Actions CI
 - [ ] Improve logging
