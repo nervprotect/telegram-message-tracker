@@ -13,6 +13,15 @@ A Telegram bot that tracks deleted and edited messages using Telegram Business.
 - Webhook support
 - Docker deployment
 
+
+## 🔍 How It Works
+
+Telegram Message Tracker works through Telegram Business connections.
+
+When a message is received, the bot stores its data temporarily. If the message is later deleted or edited, the bot can show the previous version to the user.
+
+The bot supports persistent storage with Redis for cloud deployments.
+
 ## Tech Stack
 
 - Python
