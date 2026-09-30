@@ -57,4 +57,9 @@ Supports deployment on:
 - [ ] Support more message types
 
 
+## ⚠️ Limitations
 
+- The bot can only track messages received while it is connected
+- Messages deleted before the bot receives them cannot be recovered
+- Some Telegram message types may not be fully supported yet
+- Telegram Business must be enabled for the bot
