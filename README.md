@@ -52,8 +52,8 @@ Supports deployment on:
 
 - [ ] Add automated tests(#1)
 - [ ] Improve error handling
-- [ ] Add GitHub Actions CI
-- [ ] Improve logging
+- [ ] Add GitHub Actions CI(#3)
+- [ ] Improve logging(#2)
 - [ ] Support more message types
 
 
