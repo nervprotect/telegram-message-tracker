@@ -34,7 +34,7 @@ from telegram.error import RetryAfter, BadRequest
 
 # Конфиг берётся из переменных окружения (для Railway/Render), с локальными значениями по умолчанию.
 TOKEN = os.environ.get("BOT_TOKEN", "")
-ADMIN_ID = int(os.environ.get("ADMIN_ID", "347799240"))
+ADMIN_ID = int(os.environ.get("ADMIN_ID", "0"))
 
 # DATA_DIR — на Railway укажи примонтированный Volume (например /data),
 # иначе state.json потеряется при перезапуске (файловая система там эфемерна).
