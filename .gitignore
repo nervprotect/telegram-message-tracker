@@ -2,3 +2,7 @@ state.json
 .env
 __pycache__/
 *.pyc
+*.log
+.vscode/
+.idea/
+.DS_Store
