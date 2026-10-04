@@ -2,17 +2,36 @@
 
 ## Reporting a Security Issue
 
-Please do not publish sensitive information such as:
+If you discover a security vulnerability, please do not publish sensitive details in a public issue.
 
-- Telegram bot tokens
-- Redis credentials
+When reporting a security problem:
+
+- Do not include bot tokens
+- Do not include Redis credentials
+- Do not include API keys
+- Do not include private user data
+- Describe the issue without exposing active credentials
+
+## Secrets
+
+All secrets must be stored using environment variables.
+
+Never commit:
+
+- `.env`
+- bot tokens
+- Redis passwords
 - API keys
-- User data
+- other private credentials
 
-If you discover a security issue, avoid including credentials or private data in public issues.
+If a secret is accidentally exposed, revoke or rotate it immediately.
 
-## Credentials
+## Repository Safety
 
-All secrets should be stored using environment variables.
+Before committing changes, make sure no sensitive data is included in:
 
-Never commit `.env` files or real credentials to the repository.
+- source code
+- logs
+- screenshots
+- configuration files
+- issue descriptions
