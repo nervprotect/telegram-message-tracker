@@ -50,11 +50,11 @@ Supports deployment on:
 
 ## 🗺 Roadmap
 
-- [ ] Add automated tests(#1)
-- [ ] Improve error handling
-- [ ] Add GitHub Actions CI(#3)
-- [ ] Improve logging(#2)
-- [ ] Support more message types
+- [ ] Add automated tests (#1)
+- [ ] Improve error handling (#5)
+- [ ] Add GitHub Actions CI (#3)
+- [ ] Improve logging (#2)
+- [ ] Support more message types (#4)
 
 
 ## ⚠️ Limitations
