@@ -48,6 +48,16 @@ Supports deployment on:
 - Railway
 - Render
 
+## 📚 Documentation
+
+- [Commands](docs/COMMANDS.md)
+- [FAQ](FAQ.md)
+- [Security](SECURITY.md)
+- [Privacy](PRIVACY.md)
+- [Support](SUPPORT.md)
+- [Contributing](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
+
 ## 🗺 Roadmap
 
 - [ ] Add automated tests (#1)
