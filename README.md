@@ -57,7 +57,7 @@ Supports deployment on:
 - [Support](SUPPORT.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
-- [Troubleshooting (docs/TROUBLESHOOTING.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ## 🗺 Roadmap
