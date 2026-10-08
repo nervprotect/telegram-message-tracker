@@ -50,6 +50,7 @@ Supports deployment on:
 
 ## 📚 Documentation
 
+- [Architecture](docs/ARCHITECTURE.md)
 - [Commands](docs/COMMANDS.md)
 - [FAQ](FAQ.md)
 - [Security](SECURITY.md)
