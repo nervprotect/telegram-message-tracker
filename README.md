@@ -60,6 +60,7 @@ Supports deployment on:
 - [Changelog](CHANGELOG.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Supported Messages](docs/SUPPORTED_MESSAGES.md)
 
 ## 🗺 Roadmap
 
