@@ -61,6 +61,7 @@ Supports deployment on:
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Supported Messages](docs/SUPPORTED_MESSAGES.md)
+-  [Local Setup](docs/LOCAL_SETUP.md)
 
 ## 🗺 Roadmap
 
