@@ -78,3 +78,8 @@ Supports deployment on:
 - Messages deleted before the bot receives them cannot be recovered
 - Some Telegram message types may not be fully supported yet
 - Telegram Business must be enabled for the bot
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
