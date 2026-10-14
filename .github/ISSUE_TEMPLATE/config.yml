@@ -1,0 +1,10 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Security
+    url: https://github.com/nervprotect/telegram-message-tracker/blob/main/SECURITY.md
+    about: Please read the security policy before reporting sensitive issues.
+
+  - name: Support
+    url: https://github.com/nervprotect/telegram-message-tracker/blob/main/SUPPORT.md
+    about: Check the support guide before opening a new issue.
